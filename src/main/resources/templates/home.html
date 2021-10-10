@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.com" >
+<head>
+
+    <!--Title-->
+    <title>Sender GCP</title>
+
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!--Bootstrap-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!--Otros estílos-->
+    <style>
+        .header {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        .boton-tema{
+            margin: 5px auto 5px auto;
+            width: 60%;            
+        }
+        footer {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+<!--Header-->
+<nav class="navbar navbar-dark bg-dark header">
+    <div class="container-fluid">
+        <a class="navbar-brand">SenderNews</a>
+        <form class="d-flex">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Buscar</button>
+        </form>
+    </div>
+</nav>
+<!--General section-->
+<div 
+    class="container-fluid"
+    style="
+        height: auto;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        width: 95%;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    "
+>    
+    <!--Parte izquierda-->
+    <div 
+        class="row"
+        style="
+            width: 50%;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;   
+            margin: auto;         
+        "
+    >       
+        <h3
+            style="margin-bottom: 30px;"
+        >
+            Envía un mensaje a un tema
+        </h3> 
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <button id="enviarMensaje" class="btn btn-outline-primary" type="button">Enviar mensaje</button>
+            </div>
+            <input id="textoMensaje" type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1">
+        </div>
+    </div>
+    <!--Para la lista de los temas-->
+    <div 
+        class="row"
+        style="
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            width: 50%;
+            margin: auto;
+        "
+    >
+        <div id="listadoTemasContainer" class="row row-temas">
+            <div
+                id="listadoTemas"
+                style="
+                    display: flex;
+                    flex-direction: column;
+                "
+            >
+                <button type="button" class="btn btn-danger btn-lg boton-tema">Una opcion</button>
+                <button type="button" class="btn btn-danger btn-lg boton-tema">Dos opciones</button>
+                <button type="button" class="btn btn-danger btn-lg boton-tema">Tres opciones</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Footer-->
+<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+    <p class="col-md-4 mb-0 text-muted">© 2021 Universidad Nacional Experimental de Guayana</p>
+
+    <a href="/"
+       class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+        <svg class="bi me-2" width="40" height="32">
+            <use xlink:href="#bootstrap"></use>
+        </svg>
+    </a>
+
+    <ul class="nav col-md-4 justify-content-end">
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">Home</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">Features</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">Pricing</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">FAQs</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">About</a></li>
+    </ul>
+</footer>
+
+<!--Para enviar los mensajes a Spring Boot-->
+<script>
+    $(document).ready(function() {
+        console.log("Inicia Jquery");
+        $.ajax({
+            url: "http://localhost:8081/api/ListarTemas"
+        }).then( function(data) {
+
+           console.log("Esta es la data que se obtiene: " + data);
+
+            let htmlTemas = "";
+
+            
+            for(let i=0; i < data.length; i++){     
+                htmlTemas += `
+                    <button 
+                        type="button" 
+                        id="${data[i].replace("projects/pubsubjavauneg/topics/", "")}"
+                        class="btn btn-danger btn-lg boton-tema"                        
+                    >
+                        ${data[i].replace("projects/pubsubjavauneg/topics/", "")}
+                    </button>
+                `
+            }
+
+            $("#listadoTemasContainer").find("#listadoTemas").html(htmlTemas);
+
+            var temaMensaje;
+            var mensajeFront;
+
+            //Para el evento de mensaje a un tema
+            $("#listadoTemasContainer").find("#listadoTemas").find(".boton-tema").click(function(){
+                console.log("Se ha dado click a un tema");
+                temaMensaje = $(this).attr("id");
+                console.log(temaMensaje);   
+            });
+
+            $("#enviarMensaje").click(function(){
+                console.log("Se intenta enviar un mensaje");                                
+                mensajeFront = $("#textoMensaje").val();
+                console.log(mensajeFront);
+
+                if(mensajeFront === ""){
+                    mensajeFront += "Mensaje sin contenido"
+                }
+                
+                let dataMensaje = {
+                    idTema: "musica",
+                    mensaje: "este es el mensaje"
+                }
+
+                $.ajax({
+                    type:"POST"
+                    , url:`http://localhost:8081/api/EnviarMensaje`                    
+                    , contentType: "application/json;charset=UTF-8"
+                    , data:JSON.stringify(dataMensaje)
+                }).then(function(data){
+                    console.log("¿Se envio el mensaje?")
+                    console.log(data);
+                })
+            });
+        });
+    });
+
+</script>
+
+</body>
+
+</html>
